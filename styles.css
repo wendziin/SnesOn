@@ -794,3 +794,64 @@ body {
     0% { opacity: 0; }
     100% { opacity: 1; }
 }
+
+/* Smart TV Performance Optimizations */
+body.is-tv {
+    background-color: #030305;
+}
+
+body.is-tv .glow,
+body.is-tv .glow-1,
+body.is-tv .glow-2 {
+    display: none !important;
+}
+
+body.is-tv .glass {
+    background: #0d0d16 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.is-tv .rom-badge {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(139, 92, 246, 0.25) !important;
+}
+
+/* Disable expensive animations and transitions on low-power TV browsers */
+body.is-tv *,
+body.is-tv *::before,
+body.is-tv *::after {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* Simplify card hovers to avoid layout/paint calculations */
+body.is-tv .rom-card:hover {
+    transform: none !important;
+    border-color: rgba(139, 92, 246, 0.6) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.is-tv .rom-card:hover .rom-card-cover {
+    transform: none !important;
+}
+
+body.is-tv .rom-card:hover .rom-play-icon {
+    transform: none !important;
+}
+
+body.is-tv .btn:hover {
+    transform: none !important;
+}
+
+body.is-tv .status-badge.connected .indicator-dot {
+    animation: none !important;
+    transform: none !important;
+}
+
+/* Ensure the layout is highly readable on TV screens */
+body.is-tv #app-container {
+    padding: 1.5rem !important;
+}

@@ -3,7 +3,8 @@ const state = {
     servers: [],
     activeServer: null,
     roms: [],
-    gamepadConnected: false
+    gamepadConnected: false,
+    isTV: false
 };
 
 // DOM References
@@ -31,10 +32,31 @@ const gamepadStatusText = gamepadStatus.querySelector('.status-text');
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
+    detectTV();
     loadSavedServers();
     setupEventListeners();
     setupGamepadDetection();
 });
+
+// Detectar se está rodando em uma Smart TV para desabilitar efeitos visuais pesados
+function detectTV() {
+    const ua = navigator.userAgent.toLowerCase();
+    state.isTV = ua.includes('smarttv') || 
+                 ua.includes('smart-tv') || 
+                 ua.includes('googletv') || 
+                 ua.includes('androidtv') || 
+                 ua.includes('tcl') || 
+                 ua.includes('tv') || 
+                 ua.includes('appletv') || 
+                 ua.includes('firetv') || 
+                 ua.includes('playstation') || 
+                 ua.includes('xbox');
+                 
+    if (state.isTV) {
+        document.body.classList.add('is-tv');
+        console.log("RetroStream: Smart TV detectada. Recursos pesados de CSS foram desativados para performance.");
+    }
+}
 
 // Toast Notification Helper
 function showToast(message, type = 'success') {
@@ -573,7 +595,8 @@ function launchGame(rom) {
     
     // Encode components correctly for query params
     const encodedRomUrl = encodeURIComponent(rom.absoluteUrl);
-    iframe.src = `emulator.html?game=${encodedRomUrl}&core=snes`;
+    const core = state.isTV ? 'snes9x-legacy' : 'snes';
+    iframe.src = `emulator.html?game=${encodedRomUrl}&core=${core}`;
     iframe.allow = "autoplay; gamepad";
     
     emulatorContainer.appendChild(iframe);
