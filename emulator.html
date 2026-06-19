@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RetroStream Player</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: sans-serif;
+        }
+        #game {
+            width: 100%;
+            height: 100%;
+        }
+        .error-message {
+            color: #ef4444;
+            text-align: center;
+            padding: 3rem 1.5rem;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="game"></div>
+    
+    <script type="text/javascript">
+        // Extrair parâmetros da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const gameUrl = urlParams.get('game');
+        const core = urlParams.get('core') || 'snes';
+
+        if (gameUrl) {
+            // Configurações do EmulatorJS
+            window.EJS_player = '#game';
+            window.EJS_core = core;
+            window.EJS_gameUrl = gameUrl;
+            
+            // Usar CDN estável do EmulatorJS para carregar os binários WASM das cores
+            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+            
+            // Iniciar o jogo automaticamente após o carregamento
+            window.EJS_startOnLoaded = true;
+            
+            // Configurações adicionais de acessibilidade
+            window.EJS_language = 'pt-BR';
+
+            // Carregar dinamicamente o loader do EmulatorJS
+            const loaderScript = document.createElement('script');
+            loaderScript.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+            document.body.appendChild(loaderScript);
+        } else {
+            document.body.innerHTML = '<div class="error-message">Erro: Nenhuma URL de ROM foi fornecida para o emulador.</div>';
+        }
+    </script>
+</body>
+</html>

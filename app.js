@@ -1,0 +1,598 @@
+// State Manager
+const state = {
+    servers: [],
+    activeServer: null,
+    roms: [],
+    gamepadConnected: false
+};
+
+// DOM References
+const serverForm = document.getElementById('server-form');
+const serverNameInput = document.getElementById('server-name');
+const serverUrlInput = document.getElementById('server-url');
+const serversContainer = document.getElementById('servers-container');
+
+const searchInput = document.getElementById('search-input');
+const btnRefresh = document.getElementById('btn-refresh');
+const activeServerBanner = document.getElementById('active-server-banner');
+const activeServerName = document.getElementById('active-server-name');
+const activeServerUrl = document.getElementById('active-server-url');
+
+const romsLoading = document.getElementById('roms-loading');
+const romsContainer = document.getElementById('roms-container');
+
+const emulatorOverlay = document.getElementById('emulator-overlay');
+const btnExitEmulator = document.getElementById('btn-exit-emulator');
+const currentGameTitle = document.getElementById('current-game-title');
+const emulatorContainer = document.getElementById('emulator-game-container');
+
+const gamepadStatus = document.getElementById('gamepad-status');
+const gamepadStatusText = gamepadStatus.querySelector('.status-text');
+
+// Initialize App
+document.addEventListener('DOMContentLoaded', () => {
+    loadSavedServers();
+    setupEventListeners();
+    setupGamepadDetection();
+});
+
+// Toast Notification Helper
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    toast.innerHTML = `
+        <span>${message}</span>
+        <button class="toast-close">&times;</button>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Close on click
+    toast.querySelector('.toast-close').addEventListener('click', () => {
+        toast.remove();
+    });
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.remove();
+        }
+    }, 5000);
+}
+
+// Setup Event Listeners
+function setupEventListeners() {
+    // Server form submission
+    serverForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        let url = serverUrlInput.value.trim();
+        
+        // Se o endereço não começar com http:// ou https://, adicionar http:// automaticamente
+        if (!/^https?:\/\//i.test(url)) {
+            url = 'http://' + url;
+        }
+        
+        // Remove trailing slash for uniformity
+        if (url.endsWith('/')) {
+            url = url.slice(0, -1);
+        }
+        
+        const newServer = {
+            id: Date.now(),
+            name: serverNameInput.value.trim(),
+            url: url
+        };
+        
+        state.servers.push(newServer);
+        saveServers();
+        renderServers();
+        
+        serverForm.reset();
+        showToast('Servidor adicionado com sucesso!');
+    });
+    
+    // Search ROMs input
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (query === '') {
+            renderRoms();
+        } else {
+            const filtered = state.roms.filter(rom => rom.text.toLowerCase().includes(query));
+            renderRoms(filtered);
+        }
+    });
+    
+    // Refresh button
+    btnRefresh.addEventListener('click', () => {
+        if (state.activeServer) {
+            fetchRomsForActiveServer();
+        }
+    });
+    
+    // Exit emulator overlay
+    btnExitEmulator.addEventListener('click', () => {
+        exitEmulator();
+    });
+}
+
+// Gamepad API Detection
+function setupGamepadDetection() {
+    window.addEventListener('gamepadconnected', (e) => {
+        state.gamepadConnected = true;
+        gamepadStatus.className = 'status-badge connected';
+        gamepadStatusText.textContent = `Controle Conectado: ${e.gamepad.id.slice(0, 15)}...`;
+        showToast('Controle gamepad detectado!', 'success');
+    });
+
+    window.addEventListener('gamepaddisconnected', () => {
+        state.gamepadConnected = false;
+        gamepadStatus.className = 'status-badge disconnected';
+        gamepadStatusText.textContent = 'Controle Desconectado';
+        showToast('Controle gamepad desconectado.', 'error');
+    });
+    
+    // Check initially if browser supports it and has one already connected
+    if (navigator.getGamepads) {
+        const gamepads = navigator.getGamepads();
+        for (let i = 0; i < gamepads.length; i++) {
+            if (gamepads[i]) {
+                state.gamepadConnected = true;
+                gamepadStatus.className = 'status-badge connected';
+                gamepadStatusText.textContent = `Controle Conectado: ${gamepads[i].id.slice(0, 15)}...`;
+                break;
+            }
+        }
+    }
+}
+
+// LocalStorage Persistence
+function loadSavedServers() {
+    const raw = localStorage.getItem('retrostream_servers');
+    if (raw) {
+        try {
+            state.servers = JSON.parse(raw);
+        } catch (e) {
+            state.servers = [];
+        }
+    } else {
+        // Default helper local server
+        state.servers = [
+            { id: 1, name: 'Localhost Termux', url: 'http://127.0.0.1:8080' }
+        ];
+        saveServers();
+    }
+    renderServers();
+}
+
+function saveServers() {
+    localStorage.setItem('retrostream_servers', JSON.stringify(state.servers));
+}
+
+// Render Server List
+function renderServers() {
+    serversContainer.innerHTML = '';
+    
+    if (state.servers.length === 0) {
+        serversContainer.innerHTML = '<div class="empty-state">Nenhum servidor salvo.</div>';
+        return;
+    }
+    
+    state.servers.forEach(server => {
+        const item = document.createElement('div');
+        item.className = 'server-item';
+        if (state.activeServer && state.activeServer.id === server.id) {
+            item.classList.add('active');
+        }
+        
+        item.innerHTML = `
+            <div class="server-info">
+                <span class="server-info-name">${server.name}</span>
+                <span class="server-info-url">${server.url}</span>
+            </div>
+            <button class="btn-delete-server" title="Remover Servidor">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+            </button>
+        `;
+        
+        // Click to load server
+        item.addEventListener('click', (e) => {
+            // Avoid triggering when delete is clicked
+            if (e.target.closest('.btn-delete-server')) return;
+            loadServer(server);
+        });
+        
+        // Delete server action
+        item.querySelector('.btn-delete-server').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteServer(server.id);
+        });
+        
+        serversContainer.appendChild(item);
+    });
+}
+
+// Delete Server logic
+function deleteServer(id) {
+    state.servers = state.servers.filter(s => s.id !== id);
+    saveServers();
+    
+    // If the active server was deleted, reset state
+    if (state.activeServer && state.activeServer.id === id) {
+        state.activeServer = null;
+        state.roms = [];
+        activeServerBanner.classList.add('hidden');
+        searchInput.disabled = true;
+        btnRefresh.disabled = true;
+        romsContainer.innerHTML = `
+            <div class="roms-initial-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M8 12h8M12 8v8"></path>
+                </svg>
+                <p>Selecione um servidor ao lado para carregar as ROMs.</p>
+            </div>
+        `;
+    }
+    
+    renderServers();
+    showToast('Servidor removido.');
+}
+
+// Load Server Action
+function loadServer(server) {
+    state.activeServer = server;
+    renderServers();
+    
+    // Update Banner
+    activeServerName.textContent = server.name;
+    activeServerUrl.textContent = server.url;
+    activeServerBanner.classList.remove('hidden');
+    
+    // Unlock Actions
+    searchInput.disabled = false;
+    btnRefresh.disabled = false;
+    searchInput.value = '';
+    
+    fetchRomsForActiveServer();
+}
+
+// Scrape ROM files from Server (supports standard HTTP servers and GitHub Repository API)
+async function fetchRomsForActiveServer() {
+    if (!state.activeServer) return;
+    
+    // Show spinner & hide list
+    romsLoading.classList.remove('hidden');
+    romsContainer.innerHTML = '';
+    
+    try {
+        let fetchedRoms = [];
+        let url = state.activeServer.url;
+        
+        // Detect if it is a GitHub repository folder link
+        const githubRegex = /https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/tree\/([^\/]+)\/(.+)/i;
+        const githubRootRegex = /https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/?$/i;
+        
+        let isGithub = false;
+        let apiUrl = url;
+        
+        let match = url.match(githubRegex);
+        if (match) {
+            isGithub = true;
+            const owner = match[1];
+            const repo = match[2];
+            const ref = match[3];
+            const path = match[4];
+            apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${ref}`;
+        } else {
+            match = url.match(githubRootRegex);
+            if (match) {
+                isGithub = true;
+                const owner = match[1];
+                const repo = match[2];
+                apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents`;
+            }
+        }
+        
+        if (isGithub) {
+            // Fetch from GitHub contents API
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                throw new Error(`Erro na API do GitHub: status ${response.status}`);
+            }
+            
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                fetchedRoms = data
+                    .filter(item => item.type === 'file')
+                    .map(item => {
+                        return {
+                            href: item.download_url,
+                            text: item.name
+                        };
+                    })
+                    .filter(item => {
+                        const cleanPath = item.text.toLowerCase();
+                        return cleanPath.endsWith('.smc') || 
+                               cleanPath.endsWith('.sfc') || 
+                               cleanPath.endsWith('.zip') || 
+                               cleanPath.endsWith('.7z');
+                    });
+            }
+        } else {
+            // Standard static file server (Apache/Node/etc.)
+            const response = await fetch(url, {
+                mode: 'cors' // Ensure we request CORS
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Erro HTTP: status ${response.status}`);
+            }
+            
+            const contentType = response.headers.get('Content-Type') || '';
+            
+            if (contentType.includes('application/json')) {
+                // Server responds directly with JSON array of files/paths
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    fetchedRoms = data.map(item => {
+                        if (typeof item === 'string') {
+                            return { href: item, text: getFileName(item) };
+                        } else if (item && typeof item === 'object') {
+                            return { 
+                                href: item.href || item.url || item.path, 
+                                text: item.name || item.title || getFileName(item.href || item.url || item.path) 
+                            };
+                        }
+                        return null;
+                    }).filter(Boolean);
+                }
+            } else {
+                // Assume directory listing (HTML)
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const links = Array.from(doc.querySelectorAll('a'));
+                
+                fetchedRoms = links
+                    .map(link => {
+                        const href = link.getAttribute('href');
+                        const text = link.textContent.trim();
+                        return { href, text };
+                    })
+                    .filter(item => {
+                        if (!item.href) return false;
+                        
+                        // Filter extensions: .smc, .sfc, .zip, .7z
+                        const cleanPath = item.href.split('?')[0].toLowerCase();
+                        return cleanPath.endsWith('.smc') || 
+                               cleanPath.endsWith('.sfc') || 
+                               cleanPath.endsWith('.zip') || 
+                               cleanPath.endsWith('.7z');
+                    });
+            }
+        }
+        
+        // Resolve absolute URLs
+        state.roms = fetchedRoms.map(rom => {
+            let absoluteUrl = rom.href;
+            
+            // Only resolve relative URLs if it's not a direct GitHub download link
+            if (!isGithub) {
+                let base = state.activeServer.url;
+                if (!base.endsWith('/')) {
+                    base += '/';
+                }
+                try {
+                    absoluteUrl = new URL(rom.href, base).toString();
+                } catch (e) {
+                    absoluteUrl = base + rom.href;
+                }
+            }
+            
+            // Clean up visual names
+            let displayName = rom.text;
+            if (displayName === rom.href) {
+                displayName = getFileName(rom.href);
+            }
+            // Remove file extension for cleaner display
+            displayName = displayName.replace(/\.(smc|sfc|zip|7z)$/i, '');
+            
+            return {
+                href: rom.href,
+                text: displayName,
+                absoluteUrl: absoluteUrl
+            };
+        });
+        
+        // Hide loader & render grid
+        romsLoading.classList.add('hidden');
+        renderRoms();
+        showToast(`Carregados ${state.roms.length} jogos.`);
+        
+    } catch (error) {
+        console.error('Fetch ROMs error:', error);
+        romsLoading.classList.add('hidden');
+        
+        romsContainer.innerHTML = `
+            <div class="roms-initial-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5">
+                    <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <p style="color: #ef4444; font-weight: 500;">Falha ao conectar com o servidor.</p>
+                <p style="font-size: 0.85rem; max-width: 400px; margin-top: 0.25rem;">
+                    Certifique-se de que o endereço do servidor (ou link do GitHub) está correto e ativo.
+                </p>
+            </div>
+        `;
+        showToast('Erro de conexão com o servidor ou GitHub.', 'error');
+    }
+}
+
+// Utility to get filename from path
+function getFileName(path) {
+    if (!path) return '';
+    try {
+        const decoded = decodeURIComponent(path);
+        return decoded.substring(decoded.lastIndexOf('/') + 1);
+    } catch (e) {
+        return path.substring(path.lastIndexOf('/') + 1);
+    }
+}
+
+// Normalizar nomes para melhor correspondência de capas (trata minúsculas, underlines, hifens e tags de região)
+function normalizeNameForBoxart(name) {
+    // Substituir underlines e hifens por espaços
+    let clean = name.replace(/[_-]/g, ' ');
+    
+    // Remover espaços múltiplos e pontas
+    clean = clean.replace(/\s+/g, ' ').trim();
+    
+    // Capitalizar primeira letra de cada palavra (Title Case)
+    clean = clean.toLowerCase().split(' ').map(word => {
+        if (word === 'usa') return 'USA';
+        if (word === 'jpn' || word === 'jap') return 'Japan';
+        if (word === 'eur') return 'Europe';
+        return word.charAt(0).toUpperCase() + word.slice(1);
+    }).join(' ');
+    
+    // Corrigir parênteses de região comuns
+    clean = clean.replace(/\(usa\)/i, '(USA)');
+    clean = clean.replace(/\(europe\)/i, '(Europe)');
+    clean = clean.replace(/\(japan\)/i, '(Japan)');
+    clean = clean.replace(/\(j\)/i, '(Japan)');
+    
+    return clean;
+}
+
+// Guess official cover art URLs from Libretro CDN
+function getBoxartGuesses(cleanName) {
+    const baseUrl = "https://thumbnails.libretro.com/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System/Named_Boxarts/";
+    
+    // Normalizar o nome antes de gerar as URLs de tentativa
+    const normalizedName = normalizeNameForBoxart(cleanName);
+    const encodedName = encodeURIComponent(normalizedName);
+    
+    // If name already contains parentheses (like "Super Mario World (USA)"), search it directly
+    if (/\(.*\)/.test(normalizedName)) {
+        return [
+            `${baseUrl}${encodedName}.png`
+        ];
+    }
+    
+    // Otherwise try most common region extensions
+    return [
+        `${baseUrl}${encodeURIComponent(normalizedName + ' (USA)')}.png`,
+        `${baseUrl}${encodedName}.png`,
+        `${baseUrl}${encodeURIComponent(normalizedName + ' (Europe)')}.png`,
+        `${baseUrl}${encodeURIComponent(normalizedName + ' (Japan)')}.png`
+    ];
+}
+
+// Render ROMs Grid
+function renderRoms(filteredRoms = null) {
+    const list = filteredRoms || state.roms;
+    romsContainer.innerHTML = '';
+    
+    if (list.length === 0) {
+        romsContainer.innerHTML = `
+            <div class="roms-initial-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <p>Nenhuma ROM encontrada.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    list.forEach(rom => {
+        const card = document.createElement('div');
+        card.className = 'rom-card';
+        
+        card.innerHTML = `
+            <div class="rom-card-bg-gradient"></div>
+            <img class="rom-card-cover" alt="" style="display: none;">
+            <div class="rom-card-overlay"></div>
+            <span class="rom-card-title" title="${rom.text}">${rom.text}</span>
+            <div class="rom-card-meta">
+                <span class="rom-badge">SNES</span>
+                <div class="rom-play-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                </div>
+            </div>
+        `;
+        
+        // Dynamically load cover art from guesses
+        const img = card.querySelector('.rom-card-cover');
+        const guesses = getBoxartGuesses(rom.text);
+        let guessIndex = 0;
+        
+        img.src = guesses[0];
+        img.onload = () => {
+            img.style.display = 'block';
+            card.classList.add('has-cover');
+        };
+        
+        img.onerror = () => {
+            guessIndex++;
+            if (guessIndex < guesses.length) {
+                img.src = guesses[guessIndex];
+            }
+        };
+        
+        card.addEventListener('click', () => {
+            launchGame(rom);
+        });
+        
+        romsContainer.appendChild(card);
+    });
+}
+
+// Launch Game in Iframe Sandbox
+function launchGame(rom) {
+    // Set titles
+    currentGameTitle.textContent = rom.text;
+    currentGameTitle.title = rom.text;
+    
+    // Clear and build iframe
+    emulatorContainer.innerHTML = '';
+    const iframe = document.createElement('iframe');
+    
+    // Encode components correctly for query params
+    const encodedRomUrl = encodeURIComponent(rom.absoluteUrl);
+    iframe.src = `emulator.html?game=${encodedRomUrl}&core=snes`;
+    iframe.allow = "autoplay; gamepad";
+    
+    emulatorContainer.appendChild(iframe);
+    
+    // Show Screen Overlay
+    emulatorOverlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // block page scrolls
+    
+    showToast(`Carregando: ${rom.text}...`, 'success');
+}
+
+// Destroy Emulator and Close Overlay
+function exitEmulator() {
+    // Clear out container to destroy WebAssembly instance, audio and free RAM immediately
+    emulatorContainer.innerHTML = '';
+    
+    // Hide Screen Overlay
+    emulatorOverlay.classList.add('hidden');
+    document.body.style.overflow = ''; // restore scrolling
+    
+    showToast('Jogo encerrado.', 'success');
+}
