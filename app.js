@@ -7,32 +7,43 @@ const state = {
     isTV: false
 };
 
-// DOM References
-const serverForm = document.getElementById('server-form');
-const serverNameInput = document.getElementById('server-name');
-const serverUrlInput = document.getElementById('server-url');
-const serversContainer = document.getElementById('servers-container');
+// DOM References (serão inicializadas no DOMContentLoaded)
+let serverForm, serverNameInput, serverUrlInput, serversContainer;
+let searchInput, btnRefresh, activeServerBanner, activeServerName, activeServerUrl;
+let romsLoading, romsContainer;
+let emulatorOverlay, btnExitEmulator, currentGameTitle, emulatorContainer;
+let gamepadStatus, gamepadStatusText, tvModeToggle;
 
-const searchInput = document.getElementById('search-input');
-const btnRefresh = document.getElementById('btn-refresh');
-const activeServerBanner = document.getElementById('active-server-banner');
-const activeServerName = document.getElementById('active-server-name');
-const activeServerUrl = document.getElementById('active-server-url');
+function initDOM() {
+    serverForm = document.getElementById('server-form');
+    serverNameInput = document.getElementById('server-name');
+    serverUrlInput = document.getElementById('server-url');
+    serversContainer = document.getElementById('servers-container');
 
-const romsLoading = document.getElementById('roms-loading');
-const romsContainer = document.getElementById('roms-container');
+    searchInput = document.getElementById('search-input');
+    btnRefresh = document.getElementById('btn-refresh');
+    activeServerBanner = document.getElementById('active-server-banner');
+    activeServerName = document.getElementById('active-server-name');
+    activeServerUrl = document.getElementById('active-server-url');
 
-const emulatorOverlay = document.getElementById('emulator-overlay');
-const btnExitEmulator = document.getElementById('btn-exit-emulator');
-const currentGameTitle = document.getElementById('current-game-title');
-const emulatorContainer = document.getElementById('emulator-game-container');
+    romsLoading = document.getElementById('roms-loading');
+    romsContainer = document.getElementById('roms-container');
 
-const gamepadStatus = document.getElementById('gamepad-status');
-const gamepadStatusText = gamepadStatus.querySelector('.status-text');
-const tvModeToggle = document.getElementById('tv-mode-toggle');
+    emulatorOverlay = document.getElementById('emulator-overlay');
+    btnExitEmulator = document.getElementById('btn-exit-emulator');
+    currentGameTitle = document.getElementById('current-game-title');
+    emulatorContainer = document.getElementById('emulator-game-container');
+
+    gamepadStatus = document.getElementById('gamepad-status');
+    if (gamepadStatus) {
+        gamepadStatusText = gamepadStatus.querySelector('.status-text');
+    }
+    tvModeToggle = document.getElementById('tv-mode-toggle');
+}
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
+    initDOM();
     detectTV();
     loadSavedServers();
     setupEventListeners();

@@ -884,3 +884,36 @@ body.is-tv .status-badge.connected .indicator-dot {
 body.is-tv #app-container {
     padding: 1.5rem !important;
 }
+
+/* Mobile Responsiveness for Header */
+@media (max-width: 640px) {
+    .main-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1.25rem;
+        padding-bottom: 1.25rem;
+    }
+    
+    .header-status {
+        width: 100%;
+        justify-content: center;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .status-badge {
+        width: 100%;
+        justify-content: center;
+        padding: 0.65rem 1rem;
+        font-family: inherit;
+    }
+    
+    .main-workspace {
+        gap: 1.5rem;
+    }
+    
+    #app-container {
+        padding: 1rem;
+    }
+}
