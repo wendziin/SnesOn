@@ -90,6 +90,35 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
+.header-status {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.status-badge.tv-toggle {
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    user-select: none;
+}
+
+.status-badge.tv-toggle:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.status-badge.tv-toggle.active {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.4);
+    color: #a78bfa;
+}
+
+.tv-icon {
+    flex-shrink: 0;
+}
+
 .header-logo {
     display: flex;
     align-items: center;

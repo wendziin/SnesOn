@@ -29,6 +29,7 @@ const emulatorContainer = document.getElementById('emulator-game-container');
 
 const gamepadStatus = document.getElementById('gamepad-status');
 const gamepadStatusText = gamepadStatus.querySelector('.status-text');
+const tvModeToggle = document.getElementById('tv-mode-toggle');
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
@@ -40,21 +41,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Detectar se está rodando em uma Smart TV para desabilitar efeitos visuais pesados
 function detectTV() {
+    // 1. Verificar parâmetro de URL (Ex: ?tv=1 ou ?tv=true)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tvParam = urlParams.get('tv');
+    
+    // 2. Verificar no localStorage se o usuário forçou o modo TV anteriormente
+    const savedTvMode = localStorage.getItem('retrostream_tv_mode');
+    
+    // 3. Detecção padrão por User Agent
     const ua = navigator.userAgent.toLowerCase();
-    state.isTV = ua.includes('smarttv') || 
-                 ua.includes('smart-tv') || 
-                 ua.includes('googletv') || 
-                 ua.includes('androidtv') || 
-                 ua.includes('tcl') || 
-                 ua.includes('tv') || 
-                 ua.includes('appletv') || 
-                 ua.includes('firetv') || 
-                 ua.includes('playstation') || 
-                 ua.includes('xbox');
+    const uaDetect = ua.includes('smarttv') || 
+                     ua.includes('smart-tv') || 
+                     ua.includes('googletv') || 
+                     ua.includes('androidtv') || 
+                     ua.includes('tcl') || 
+                     ua.includes('tv') || 
+                     ua.includes('appletv') || 
+                     ua.includes('firetv') || 
+                     ua.includes('playstation') || 
+                     ua.includes('xbox');
+                     
+    // Decisão final
+    if (tvParam === '1' || tvParam === 'true') {
+        state.isTV = true;
+        localStorage.setItem('retrostream_tv_mode', 'true');
+    } else if (tvParam === '0' || tvParam === 'false') {
+        state.isTV = false;
+        localStorage.setItem('retrostream_tv_mode', 'false');
+    } else if (savedTvMode !== null) {
+        state.isTV = (savedTvMode === 'true');
+    } else {
+        state.isTV = uaDetect;
+    }
                  
     if (state.isTV) {
         document.body.classList.add('is-tv');
-        console.log("RetroStream: Smart TV detectada. Recursos pesados de CSS foram desativados para performance.");
+        console.log("RetroStream: Smart TV ativada. Recursos pesados de CSS foram desativados para performance.");
+    } else {
+        document.body.classList.remove('is-tv');
+    }
+    
+    updateTvToggleUI();
+}
+
+function updateTvToggleUI() {
+    if (!tvModeToggle) return;
+    const textSpan = tvModeToggle.querySelector('.status-text');
+    if (state.isTV) {
+        tvModeToggle.classList.add('active');
+        if (textSpan) textSpan.textContent = 'Modo TV: Ativo';
+    } else {
+        tvModeToggle.classList.remove('active');
+        if (textSpan) textSpan.textContent = 'Modo TV: Desativado';
     }
 }
 
@@ -138,6 +176,23 @@ function setupEventListeners() {
     btnExitEmulator.addEventListener('click', () => {
         exitEmulator();
     });
+    
+    // Alternar modo TV manualmente
+    if (tvModeToggle) {
+        tvModeToggle.addEventListener('click', () => {
+            const newMode = !state.isTV;
+            localStorage.setItem('retrostream_tv_mode', newMode ? 'true' : 'false');
+            
+            showToast(newMode ? 'Modo TV ativado! Recarregando...' : 'Modo TV desativado! Recarregando...', 'success');
+            
+            setTimeout(() => {
+                // Remover parâmetro da URL de tv se existir
+                const url = new URL(window.location.href);
+                url.searchParams.delete('tv');
+                window.location.href = url.toString();
+            }, 1000);
+        });
+    }
 }
 
 // Gamepad API Detection
