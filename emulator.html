@@ -41,8 +41,8 @@
             window.EJS_core = core;
             window.EJS_gameUrl = gameUrl;
             
-            // Usar CDN estável do EmulatorJS para carregar os binários WASM das cores
-            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+            // Usar CDN do EmulatorJS para carregar os binários WASM das cores
+            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/nightly/data/';
             
             // Iniciar o jogo automaticamente após o carregamento
             window.EJS_startOnLoaded = true;
@@ -50,9 +50,12 @@
             // Configurações adicionais de acessibilidade
             window.EJS_language = 'pt-BR';
 
+            // Desativar multi-threading para rodar em modo leve single-thread (essencial para TV)
+            window.EJS_threads = false;
+
             // Carregar dinamicamente o loader do EmulatorJS
             const loaderScript = document.createElement('script');
-            loaderScript.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+            loaderScript.src = 'https://cdn.emulatorjs.org/nightly/data/loader.js';
             document.body.appendChild(loaderScript);
         } else {
             document.body.innerHTML = '<div class="error-message">Erro: Nenhuma URL de ROM foi fornecida para o emulador.</div>';

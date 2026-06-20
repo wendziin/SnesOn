@@ -689,7 +689,7 @@ function launchGame(rom) {
     // Encode components correctly for query params
     const encodedRomUrl = encodeURIComponent(rom.absoluteUrl);
     const core = 'snes';
-    iframe.src = `emulator.html?game=${encodedRomUrl}&core=${core}`;
+    iframe.src = `emulator.html?v=1.0.6&game=${encodedRomUrl}&core=${core}`;
     iframe.allow = "autoplay; gamepad";
     
     emulatorContainer.appendChild(iframe);
