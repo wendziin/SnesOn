@@ -4,8 +4,29 @@ const state = {
     activeServer: null,
     roms: [],
     gamepadConnected: false,
-    isTV: false
+    isTV: false,
+    
+    // Pagination & Infinite Scroll State
+    pagination: {
+        currentPage: 1,
+        itemsPerPage: 12,
+        filteredRoms: [],
+        hasMore: true
+    },
+    isLoadingRoms: false,
+    observer: null
 };
+
+// --- Função de Debounce ---
+function debounce(func, delay = 300) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            func.apply(this, args);
+        }, delay);
+    };
+}
 
 // Armazenamento seguro de fallback se o localStorage estiver bloqueado (ex: aba anônima)
 const memoryStorage = {};
@@ -192,15 +213,25 @@ function setupEventListeners() {
         showToast('Servidor adicionado com sucesso!');
     });
     
-    // Search ROMs input
+    // Search ROMs input with debounce and pagination
+    const debouncedSearch = debounce((query) => {
+        state.pagination.currentPage = 1;
+        state.pagination.hasMore = true;
+        
+        if (query === '') {
+            state.pagination.filteredRoms = [...state.roms];
+        } else {
+            state.pagination.filteredRoms = state.roms.filter(rom => 
+                rom.text.toLowerCase().includes(query)
+            );
+        }
+        
+        renderNextPage(true);
+    }, 300);
+
     searchInput.addEventListener('input', (e) => {
         const query = e.target.value.toLowerCase().trim();
-        if (query === '') {
-            renderRoms();
-        } else {
-            const filtered = state.roms.filter(rom => rom.text.toLowerCase().includes(query));
-            renderRoms(filtered);
-        }
+        debouncedSearch(query);
     });
     
     // Refresh button
@@ -346,6 +377,17 @@ function deleteServer(id) {
         activeServerBanner.classList.add('hidden');
         searchInput.disabled = true;
         btnRefresh.disabled = true;
+        
+        // Reset pagination state
+        if (state.observer) {
+            state.observer.disconnect();
+            state.observer = null;
+        }
+        state.pagination.currentPage = 1;
+        state.pagination.filteredRoms = [];
+        state.pagination.hasMore = false;
+        updateScrollTriggerMessage();
+        
         romsContainer.innerHTML = `
             <div class="roms-initial-state">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -383,9 +425,12 @@ function loadServer(server) {
 async function fetchRomsForActiveServer() {
     if (!state.activeServer) return;
     
-    // Show spinner & hide list
-    romsLoading.classList.remove('hidden');
-    romsContainer.innerHTML = '';
+    // Show skeletons and reset loading state
+    state.isLoadingRoms = true;
+    showSkeletons(12);
+    if (romsLoading) {
+        romsLoading.classList.add('hidden');
+    }
     
     try {
         let fetchedRoms = [];
@@ -528,13 +573,19 @@ async function fetchRomsForActiveServer() {
         });
         
         // Hide loader & render grid
-        romsLoading.classList.add('hidden');
-        renderRoms();
+        if (romsLoading) romsLoading.classList.add('hidden');
+        
+        state.pagination.filteredRoms = [...state.roms];
+        state.isLoadingRoms = false;
+        renderNextPage(true);
+        setupIntersectionObserver();
+        
         showToast(`Carregados ${state.roms.length} jogos.`);
         
     } catch (error) {
         console.error('Fetch ROMs error:', error);
-        romsLoading.classList.add('hidden');
+        state.isLoadingRoms = false;
+        if (romsLoading) romsLoading.classList.add('hidden');
         
         romsContainer.innerHTML = `
             <div class="roms-initial-state">
@@ -613,67 +664,153 @@ function getBoxartGuesses(cleanName) {
     ];
 }
 
-// Render ROMs Grid
-function renderRoms(filteredRoms = null) {
-    const list = filteredRoms || state.roms;
+// Exibir skeletons de carregamento
+function showSkeletons(count = 12) {
     romsContainer.innerHTML = '';
-    
-    if (list.length === 0) {
-        romsContainer.innerHTML = `
-            <div class="roms-initial-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <p>Nenhuma ROM encontrada.</p>
-            </div>
+    for (let i = 0; i < count; i++) {
+        const card = document.createElement('div');
+        card.className = 'rom-card skeleton-card';
+        card.innerHTML = `
+            <div class="skeleton skeleton-cover"></div>
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-badge"></div>
         `;
+        romsContainer.appendChild(card);
+    }
+}
+
+// Configurar o Intersection Observer para rolagem com paginação
+function setupIntersectionObserver() {
+    if (state.observer) {
+        state.observer.disconnect();
+    }
+    
+    const trigger = document.getElementById('infinite-scroll-trigger');
+    if (!trigger) return;
+    
+    const options = {
+        root: null,
+        rootMargin: '150px', // Carrega com antecedência
+        threshold: 0.1
+    };
+    
+    const callback = (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting && !state.isLoadingRoms && state.pagination.hasMore) {
+            renderNextPage(false);
+        }
+    };
+    
+    state.observer = new IntersectionObserver(callback, options);
+    state.observer.observe(trigger);
+}
+
+// Atualizar mensagem do trigger do scroll infinito
+function updateScrollTriggerMessage() {
+    const trigger = document.getElementById('infinite-scroll-trigger');
+    if (!trigger) return;
+    
+    if (state.pagination.hasMore && state.pagination.filteredRoms.length > 0) {
+        trigger.innerHTML = `<div class="spinner" style="width: 20px; height: 20px; border-width: 2px; margin-right: 8px;"></div> Carregando mais jogos...`;
+    } else if (state.pagination.filteredRoms.length > 0) {
+        trigger.textContent = 'Todos os jogos foram carregados.';
+    } else {
+        trigger.textContent = '';
+    }
+}
+
+// Criar elemento DOM do card do jogo
+function createRomCard(rom) {
+    const card = document.createElement('div');
+    card.className = 'rom-card';
+    
+    card.innerHTML = `
+        <div class="rom-card-bg-gradient"></div>
+        <img class="rom-card-cover" alt="" style="display: none;">
+        <div class="rom-card-overlay"></div>
+        <span class="rom-card-title" title="${rom.text}">${rom.text}</span>
+        <div class="rom-card-meta">
+            <span class="rom-badge">SNES</span>
+            <div class="rom-play-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+            </div>
+        </div>
+    `;
+    
+    // Carregar capa do jogo dinamicamente com base nas alternativas
+    const img = card.querySelector('.rom-card-cover');
+    const guesses = getBoxartGuesses(rom.text);
+    let guessIndex = 0;
+    
+    img.src = guesses[0];
+    img.onload = () => {
+        img.style.display = 'block';
+        card.classList.add('has-cover');
+    };
+    
+    img.onerror = () => {
+        guessIndex++;
+        if (guessIndex < guesses.length) {
+            img.src = guesses[guessIndex];
+        }
+    };
+    
+    card.addEventListener('click', () => {
+        launchGame(rom);
+    });
+    
+    return card;
+}
+
+// Renderizar lote de ROMs
+function renderRomsBatch(batch) {
+    batch.forEach(rom => {
+        const card = createRomCard(rom);
+        romsContainer.appendChild(card);
+    });
+}
+
+// Renderizar próxima página de jogos
+function renderNextPage(clearGrid = false) {
+    if (clearGrid) {
+        state.pagination.currentPage = 1;
+        state.pagination.hasMore = true;
+        romsContainer.innerHTML = '';
+        window.scrollTo(0, 0);
+    }
+    
+    const start = (state.pagination.currentPage - 1) * state.pagination.itemsPerPage;
+    const end = start + state.pagination.itemsPerPage;
+    const batch = state.pagination.filteredRoms.slice(start, end);
+    
+    if (batch.length === 0) {
+        state.pagination.hasMore = false;
+        updateScrollTriggerMessage();
+        if (clearGrid) {
+            romsContainer.innerHTML = `
+                <div class="roms-initial-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <p>Nenhuma ROM encontrada.</p>
+                </div>
+            `;
+        }
         return;
     }
     
-    list.forEach(rom => {
-        const card = document.createElement('div');
-        card.className = 'rom-card';
-        
-        card.innerHTML = `
-            <div class="rom-card-bg-gradient"></div>
-            <img class="rom-card-cover" alt="" style="display: none;">
-            <div class="rom-card-overlay"></div>
-            <span class="rom-card-title" title="${rom.text}">${rom.text}</span>
-            <div class="rom-card-meta">
-                <span class="rom-badge">SNES</span>
-                <div class="rom-play-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                    </svg>
-                </div>
-            </div>
-        `;
-        
-        // Dynamically load cover art from guesses
-        const img = card.querySelector('.rom-card-cover');
-        const guesses = getBoxartGuesses(rom.text);
-        let guessIndex = 0;
-        
-        img.src = guesses[0];
-        img.onload = () => {
-            img.style.display = 'block';
-            card.classList.add('has-cover');
-        };
-        
-        img.onerror = () => {
-            guessIndex++;
-            if (guessIndex < guesses.length) {
-                img.src = guesses[guessIndex];
-            }
-        };
-        
-        card.addEventListener('click', () => {
-            launchGame(rom);
-        });
-        
-        romsContainer.appendChild(card);
-    });
+    renderRomsBatch(batch);
+    
+    if (end >= state.pagination.filteredRoms.length) {
+        state.pagination.hasMore = false;
+    } else {
+        state.pagination.currentPage++;
+    }
+    
+    updateScrollTriggerMessage();
 }
 
 // Launch Game in Iframe Sandbox

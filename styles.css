@@ -925,3 +925,153 @@ body.is-tv #app-container {
         padding: 1rem;
     }
 }
+
+/* Skeletons Loading Style */
+.skeleton-card {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+    pointer-events: none;
+    box-shadow: none !important;
+}
+
+.skeleton-card::before {
+    display: none !important;
+}
+
+.skeleton-card .rom-card-bg-gradient {
+    display: none !important;
+}
+
+.skeleton {
+    background: linear-gradient(90deg, 
+        rgba(255, 255, 255, 0.03) 25%, 
+        rgba(255, 255, 255, 0.08) 50%, 
+        rgba(255, 255, 255, 0.03) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-pulse 1.5s infinite linear;
+    border-radius: 4px;
+}
+
+/* Smart TVs: Desativar animações de skeletons para poupar CPU */
+body.is-tv .skeleton {
+    animation: none !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+@keyframes skeleton-pulse {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.skeleton-title {
+    height: 1.1rem;
+    width: 80%;
+    margin-top: auto;
+    z-index: 1;
+}
+
+.skeleton-badge {
+    height: 0.85rem;
+    width: 40px;
+    margin-top: 0.75rem;
+    z-index: 1;
+}
+
+/* Infinite Scroll Trigger */
+#infinite-scroll-trigger {
+    width: 100%;
+    height: 40px;
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* Celulares em modo paisagem (Landscape) ou telas de baixa altura */
+@media (max-height: 520px) and (orientation: landscape) {
+    #app-container {
+        padding: 0.75rem !important;
+    }
+    
+    .main-header {
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-bottom: 1rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+    
+    .header-logo h1 {
+        font-size: 1.25rem !important;
+    }
+    
+    .header-status {
+        flex-direction: row !important;
+        width: auto !important;
+        gap: 0.5rem !important;
+    }
+    
+    .status-badge {
+        width: auto !important;
+        padding: 0.35rem 0.75rem !important;
+        font-size: 0.75rem !important;
+    }
+    
+    .main-workspace {
+        grid-template-columns: 240px 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    .card {
+        padding: 1rem !important;
+    }
+    
+    .card h2 {
+        font-size: 1rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .form-group label {
+        font-size: 0.75rem !important;
+    }
+    
+    .form-group input {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.8rem !important;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.8rem !important;
+    }
+    
+    .rom-card {
+        height: 140px !important;
+        padding: 0.75rem !important;
+    }
+    
+    .rom-card-title {
+        font-size: 0.85rem !important;
+    }
+    
+    .rom-badge {
+        font-size: 0.6rem !important;
+    }
+    
+    .rom-play-icon {
+        width: 26px !important;
+        height: 26px !important;
+    }
+}
