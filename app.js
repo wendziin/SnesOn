@@ -7,6 +7,27 @@ const state = {
     isTV: false
 };
 
+// Armazenamento seguro de fallback se o localStorage estiver bloqueado (ex: aba anônima)
+const memoryStorage = {};
+const safeStorage = {
+    getItem(key) {
+        try {
+            return localStorage.getItem(key);
+        } catch (e) {
+            console.warn("localStorage.getItem inacessível:", e);
+            return memoryStorage[key] || null;
+        }
+    },
+    setItem(key, value) {
+        try {
+            localStorage.setItem(key, value);
+        } catch (e) {
+            console.warn("localStorage.setItem inacessível:", e);
+            memoryStorage[key] = String(value);
+        }
+    }
+};
+
 // DOM References (serão inicializadas no DOMContentLoaded)
 let serverForm, serverNameInput, serverUrlInput, serversContainer;
 let searchInput, btnRefresh, activeServerBanner, activeServerName, activeServerUrl;
@@ -57,7 +78,7 @@ function detectTV() {
     const tvParam = urlParams.get('tv');
     
     // 2. Verificar no localStorage se o usuário forçou o modo TV anteriormente
-    const savedTvMode = localStorage.getItem('retrostream_tv_mode');
+    const savedTvMode = safeStorage.getItem('retrostream_tv_mode');
     
     // 3. Detecção padrão por User Agent
     const ua = navigator.userAgent.toLowerCase();
@@ -75,10 +96,10 @@ function detectTV() {
     // Decisão final
     if (tvParam === '1' || tvParam === 'true') {
         state.isTV = true;
-        localStorage.setItem('retrostream_tv_mode', 'true');
+        safeStorage.setItem('retrostream_tv_mode', 'true');
     } else if (tvParam === '0' || tvParam === 'false') {
         state.isTV = false;
-        localStorage.setItem('retrostream_tv_mode', 'false');
+        safeStorage.setItem('retrostream_tv_mode', 'false');
     } else if (savedTvMode !== null) {
         state.isTV = (savedTvMode === 'true');
     } else {
@@ -192,7 +213,7 @@ function setupEventListeners() {
     if (tvModeToggle) {
         tvModeToggle.addEventListener('click', () => {
             const newMode = !state.isTV;
-            localStorage.setItem('retrostream_tv_mode', newMode ? 'true' : 'false');
+            safeStorage.setItem('retrostream_tv_mode', newMode ? 'true' : 'false');
             
             showToast(newMode ? 'Modo TV ativado! Recarregando...' : 'Modo TV desativado! Recarregando...', 'success');
             
@@ -238,7 +259,7 @@ function setupGamepadDetection() {
 
 // LocalStorage Persistence
 function loadSavedServers() {
-    const raw = localStorage.getItem('retrostream_servers');
+    const raw = safeStorage.getItem('retrostream_servers');
     if (raw) {
         try {
             state.servers = JSON.parse(raw);
@@ -256,7 +277,7 @@ function loadSavedServers() {
 }
 
 function saveServers() {
-    localStorage.setItem('retrostream_servers', JSON.stringify(state.servers));
+    safeStorage.setItem('retrostream_servers', JSON.stringify(state.servers));
 }
 
 // Render Server List
