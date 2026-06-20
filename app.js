@@ -63,13 +63,19 @@ function initDOM() {
 }
 
 // Initialize App
-document.addEventListener('DOMContentLoaded', () => {
+function initializeAll() {
     initDOM();
     detectTV();
     loadSavedServers();
     setupEventListeners();
     setupGamepadDetection();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAll);
+} else {
+    initializeAll();
+}
 
 // Detectar se está rodando em uma Smart TV para desabilitar efeitos visuais pesados
 function detectTV() {
