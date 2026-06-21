@@ -3,8 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Habilitar SharedArrayBuffer e Multi-threading em servidores estáticos (CORS Bypass) -->
-    <script src="coi-serviceworker.js?v=1.0.7"></script>
+    <!-- Script para desativar coi-serviceworker anterior se estiver ativo no navegador -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for (let registration of registrations) {
+                    if (registration.active && registration.active.scriptURL.includes('coi-serviceworker')) {
+                        registration.unregister().then(() => {
+                            console.log('coi-serviceworker desativado com sucesso.');
+                            window.location.reload();
+                        });
+                    }
+                }
+            });
+        }
+    </script>
     <title>RetroStream SNES - Jogue Online</title>
     
     <!-- PWA & Mobile Optimization -->
@@ -19,7 +32,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="styles.css?v=1.0.9">
+    <link rel="stylesheet" href="styles.css?v=1.1.0">
 </head>
 <body>
     <div id="app-container">
@@ -178,6 +191,6 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Script Application -->
-    <script src="app.js?v=1.1.1" defer></script>
+    <script src="app.js?v=1.1.2" defer></script>
 </body>
 </html>
