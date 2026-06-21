@@ -505,9 +505,9 @@ body {
     height: 100%;
     object-fit: cover;
     z-index: 0;
-    opacity: 0.7;
-    filter: brightness(0.5) contrast(1.1);
-    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s ease;
+    opacity: 0.92;
+    filter: brightness(0.85) contrast(1.02);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s ease, opacity 0.6s ease;
 }
 
 /* Elegant Text Overlay */
@@ -530,7 +530,8 @@ body {
 
 .rom-card:hover .rom-card-cover {
     transform: scale(1.08);
-    filter: brightness(0.6) contrast(1.15);
+    opacity: 1;
+    filter: brightness(1.0) contrast(1.02);
 }
 
 .rom-card:hover .rom-card-overlay {
