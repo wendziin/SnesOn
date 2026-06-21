@@ -4,7 +4,6 @@ const state = {
     activeServer: null,
     roms: [],
     gamepadConnected: false,
-    isTV: false,
     
     // Pagination & Infinite Scroll State
     pagination: {
@@ -54,7 +53,7 @@ let serverForm, serverNameInput, serverUrlInput, serversContainer;
 let searchInput, btnRefresh, activeServerBanner, activeServerName, activeServerUrl;
 let romsLoading, romsContainer;
 let emulatorOverlay, btnExitEmulator, currentGameTitle, emulatorContainer;
-let gamepadStatus, gamepadStatusText, tvModeToggle;
+let gamepadStatus, gamepadStatusText;
 
 function initDOM() {
     serverForm = document.getElementById('server-form');
@@ -80,13 +79,11 @@ function initDOM() {
     if (gamepadStatus) {
         gamepadStatusText = gamepadStatus.querySelector('.status-text');
     }
-    tvModeToggle = document.getElementById('tv-mode-toggle');
 }
 
 // Initialize App
 function initializeAll() {
     initDOM();
-    detectTV();
     loadSavedServers();
     setupEventListeners();
     setupGamepadDetection();
@@ -98,62 +95,7 @@ if (document.readyState === 'loading') {
     initializeAll();
 }
 
-// Detectar se está rodando em uma Smart TV para desabilitar efeitos visuais pesados
-function detectTV() {
-    // 1. Verificar parâmetro de URL (Ex: ?tv=1 ou ?tv=true)
-    const urlParams = new URLSearchParams(window.location.search);
-    const tvParam = urlParams.get('tv');
-    
-    // 2. Verificar no localStorage se o usuário forçou o modo TV anteriormente
-    const savedTvMode = safeStorage.getItem('retrostream_tv_mode');
-    
-    // 3. Detecção padrão por User Agent
-    const ua = navigator.userAgent.toLowerCase();
-    const uaDetect = ua.includes('smarttv') || 
-                     ua.includes('smart-tv') || 
-                     ua.includes('googletv') || 
-                     ua.includes('androidtv') || 
-                     ua.includes('tcl') || 
-                     ua.includes('tv') || 
-                     ua.includes('appletv') || 
-                     ua.includes('firetv') || 
-                     ua.includes('playstation') || 
-                     ua.includes('xbox');
-                     
-    // Decisão final
-    if (tvParam === '1' || tvParam === 'true') {
-        state.isTV = true;
-        safeStorage.setItem('retrostream_tv_mode', 'true');
-    } else if (tvParam === '0' || tvParam === 'false') {
-        state.isTV = false;
-        safeStorage.setItem('retrostream_tv_mode', 'false');
-    } else if (savedTvMode !== null) {
-        state.isTV = (savedTvMode === 'true');
-    } else {
-        state.isTV = uaDetect;
-    }
-                 
-    if (state.isTV) {
-        document.body.classList.add('is-tv');
-        console.log("RetroStream: Smart TV ativada. Recursos pesados de CSS foram desativados para performance.");
-    } else {
-        document.body.classList.remove('is-tv');
-    }
-    
-    updateTvToggleUI();
-}
 
-function updateTvToggleUI() {
-    if (!tvModeToggle) return;
-    const textSpan = tvModeToggle.querySelector('.status-text');
-    if (state.isTV) {
-        tvModeToggle.classList.add('active');
-        if (textSpan) textSpan.textContent = 'Modo TV: Ativo';
-    } else {
-        tvModeToggle.classList.remove('active');
-        if (textSpan) textSpan.textContent = 'Modo TV: Desativado';
-    }
-}
 
 // Toast Notification Helper
 function showToast(message, type = 'success') {
@@ -245,23 +187,6 @@ function setupEventListeners() {
     btnExitEmulator.addEventListener('click', () => {
         exitEmulator();
     });
-    
-    // Alternar modo TV manualmente
-    if (tvModeToggle) {
-        tvModeToggle.addEventListener('click', () => {
-            const newMode = !state.isTV;
-            safeStorage.setItem('retrostream_tv_mode', newMode ? 'true' : 'false');
-            
-            showToast(newMode ? 'Modo TV ativado! Recarregando...' : 'Modo TV desativado! Recarregando...', 'success');
-            
-            setTimeout(() => {
-                // Remover parâmetro da URL de tv se existir
-                const url = new URL(window.location.href);
-                url.searchParams.delete('tv');
-                window.location.href = url.toString();
-            }, 1000);
-        });
-    }
 }
 
 // Gamepad API Detection
@@ -832,16 +757,16 @@ function launchGame(rom) {
     emulatorContainer.innerHTML = '';
     const iframe = document.createElement('iframe');
     
-    // Bypass CORS do Dropbox usando o proxy público corsproxy.io
+    // Converter links do Dropbox para o subdomínio dl.dropboxusercontent.com para ignorar CORS sem proxy
     let targetRomUrl = rom.absoluteUrl;
-    if (targetRomUrl.includes('dropbox.com') || targetRomUrl.includes('dropboxusercontent.com')) {
-        targetRomUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetRomUrl);
+    if (targetRomUrl.includes('dropbox.com') && !targetRomUrl.includes('dl.dropboxusercontent.com')) {
+        targetRomUrl = targetRomUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
     }
     
     // Encode components correctly for query params
     const encodedRomUrl = encodeURIComponent(targetRomUrl);
     const core = 'snes';
-    iframe.src = `emulator.html?v=1.1.3&game=${encodedRomUrl}&core=${core}`;
+    iframe.src = `emulator.html?v=1.1.4&game=${encodedRomUrl}&core=${core}`;
     iframe.allow = "autoplay; gamepad";
     
     emulatorContainer.appendChild(iframe);
