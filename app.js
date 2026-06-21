@@ -436,6 +436,11 @@ async function fetchRomsForActiveServer() {
         let fetchedRoms = [];
         let url = state.activeServer.url;
         
+        // Detect if it is a Dropbox folder link
+        if (url.includes('dropbox.com')) {
+            throw new Error('Dropbox não suporta listagem direta de arquivos via navegador (CORS). Por favor, hospede suas ROMs no GitHub ou use o servidor local Termux.');
+        }
+        
         // Detect if it is a GitHub repository folder link
         const githubRegex = /https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/tree\/([^\/]+)\/(.+)/i;
         const githubRootRegex = /https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\/?$/i;
@@ -587,6 +592,8 @@ async function fetchRomsForActiveServer() {
         state.isLoadingRoms = false;
         if (romsLoading) romsLoading.classList.add('hidden');
         
+        const isDropboxErr = error.message.includes('Dropbox');
+        
         romsContainer.innerHTML = `
             <div class="roms-initial-state">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5">
@@ -594,13 +601,13 @@ async function fetchRomsForActiveServer() {
                     <line x1="12" y1="8" x2="12" y2="12"></line>
                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
                 </svg>
-                <p style="color: #ef4444; font-weight: 500;">Falha ao conectar com o servidor.</p>
-                <p style="font-size: 0.85rem; max-width: 400px; margin-top: 0.25rem;">
-                    Certifique-se de que o endereço do servidor (ou link do GitHub) está correto e ativo.
+                <p style="color: #ef4444; font-weight: 500;">${isDropboxErr ? 'Dropbox não suportado' : 'Falha ao conectar com o servidor.'}</p>
+                <p style="font-size: 0.85rem; max-width: 420px; margin-top: 0.25rem;">
+                    ${isDropboxErr ? error.message : 'Certifique-se de que o endereço do servidor (ou link do GitHub) está correto e ativo.'}
                 </p>
             </div>
         `;
-        showToast('Erro de conexão com o servidor ou GitHub.', 'error');
+        showToast(isDropboxErr ? 'Dropbox não suportado.' : 'Erro de conexão com o servidor ou GitHub.', 'error');
     }
 }
 
@@ -744,7 +751,6 @@ function createRomCard(rom) {
     const guesses = getBoxartGuesses(rom.text);
     let guessIndex = 0;
     
-    img.src = guesses[0];
     img.onload = () => {
         img.style.display = 'block';
         card.classList.add('has-cover');
@@ -756,6 +762,8 @@ function createRomCard(rom) {
             img.src = guesses[guessIndex];
         }
     };
+    
+    img.src = guesses[0];
     
     card.addEventListener('click', () => {
         launchGame(rom);
