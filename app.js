@@ -502,8 +502,9 @@ async function fetchRomsForActiveServer() {
             }
             
             const contentType = response.headers.get('Content-Type') || '';
+            const isJson = contentType.includes('application/json') || url.toLowerCase().split('?')[0].endsWith('.json');
             
-            if (contentType.includes('application/json')) {
+            if (isJson) {
                 // Server responds directly with JSON array of files/paths
                 const data = await response.json();
                 if (Array.isArray(data)) {
