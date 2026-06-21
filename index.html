@@ -18,41 +18,43 @@
             });
         }
     </script>
-    <title>RetroStream SNES - Jogue Online</title>
+    <title>RetroStream SNES - Play Online</title>
     
     <!-- PWA & Mobile Optimization -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#050508">
+    <meta name="theme-color" content="#06060c">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="styles.css?v=1.1.4">
+    <link rel="stylesheet" href="styles.css?v=1.1.5">
 </head>
 <body>
-    <div id="app-container">
-        <!-- Background Decorative Glows -->
-        <div class="glow glow-1"></div>
-        <div class="glow glow-2"></div>
+    <!-- Decorative Glowing Ambient Lights -->
+    <div class="glow-orb glow-primary"></div>
+    <div class="glow-orb glow-secondary"></div>
+    <div class="glow-orb glow-tertiary"></div>
 
-        <!-- Header -->
-        <header class="main-header">
+    <div id="app-container">
+        <!-- Floating Header -->
+        <header class="app-header glass">
             <div class="header-left">
-                <!-- Hamburger Menu Button -->
-                <button id="menu-toggle" class="btn-menu" title="Configurar Servidores">
+                <!-- Hamburger Menu Settings Button -->
+                <button id="menu-toggle" class="icon-btn menu-btn" title="Configurar Servidores">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="12" x2="21" y2="12" stroke-linecap="round"></line>
+                        <line x1="3" y1="6" x2="21" y2="6" stroke-linecap="round"></line>
+                        <line x1="3" y1="18" x2="21" y2="18" stroke-linecap="round"></line>
                     </svg>
                 </button>
-                <div class="header-logo">
-                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                
+                <div class="logo">
+                    <svg class="logo-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="2" y="6" width="20" height="12" rx="3" />
                         <circle cx="6" cy="12" r="1.5" fill="currentColor" />
                         <circle cx="9" cy="12" r="1.5" fill="currentColor" />
@@ -64,147 +66,154 @@
                 </div>
             </div>
             
-            <div class="header-status">
-                <!-- Gamepad Indicator -->
-                <div id="gamepad-status" class="status-badge disconnected">
-                    <span class="indicator-dot"></span>
+            <div class="header-right">
+                <!-- Gamepad Connection Badge -->
+                <div id="gamepad-status" class="gamepad-badge disconnected">
+                    <span class="pulse-dot"></span>
+                    <svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="6" width="20" height="12" rx="3"></rect>
+                        <path d="M12 12h.01M15 12h.01M9 12H7M8 11v2"></path>
+                    </svg>
                     <span class="status-text">Controle Desconectado</span>
                 </div>
             </div>
         </header>
 
         <!-- Main Workspace -->
-        <main class="main-workspace">
-            <!-- Main Content Area: ROMs Browser -->
-            <section class="content-section">
-                <div class="card glass roms-browser-card">
-                    <div class="roms-browser-header">
-                        <h2>
-                            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                            </svg>
-                            ROMs Disponíveis
-                        </h2>
-                        
-                        <!-- Search & Refresh -->
-                        <div class="browser-actions">
-                            <div class="search-box">
-                                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="11" cy="11" r="8"></circle>
-                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                                </svg>
-                                <input type="text" id="search-input" placeholder="Buscar jogo..." disabled>
-                            </div>
-                            <button id="btn-refresh" class="btn btn-icon btn-secondary" title="Recarregar" disabled>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
+        <main class="app-main">
+            <!-- Filter Bar & Search -->
+            <section class="filter-section glass">
+                <div class="search-wrapper">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="search-input" placeholder="Buscar jogo na biblioteca..." disabled>
+                </div>
+                <button id="btn-refresh" class="icon-btn refresh-btn" title="Atualizar Lista" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                </button>
+            </section>
 
-                    <!-- Current Server Display -->
-                    <div id="active-server-banner" class="active-server-banner hidden">
-                        <span class="active-label">Conectado a:</span>
-                        <span id="active-server-name" class="active-name">-</span>
-                        <span id="active-server-url" class="active-url">-</span>
-                    </div>
+            <!-- Active Server Status Display -->
+            <div id="active-server-banner" class="active-server-card glass hidden">
+                <div class="status-indicator">
+                    <span class="online-indicator"></span>
+                </div>
+                <div class="server-details">
+                    <span class="server-label">Conectado a</span>
+                    <h2 id="active-server-name" class="server-name">-</h2>
+                    <p id="active-server-url" class="server-url">-</p>
+                </div>
+            </div>
 
-                    <!-- ROMs Grid -->
-                    <div id="roms-loading" class="roms-loading-state hidden">
-                        <div class="spinner"></div>
-                        <p>Buscando ROMs no servidor...</p>
-                    </div>
+            <!-- Games Grid Container -->
+            <div class="library-container">
+                <!-- Loading State Spinner -->
+                <div id="roms-loading" class="roms-loading-state hidden">
+                    <div class="loader-spinner"></div>
+                    <p>Buscando jogos no servidor...</p>
+                </div>
 
-                    <div id="roms-container" class="roms-grid">
-                        <div class="roms-initial-state">
+                <!-- Core Grid -->
+                <div id="roms-container" class="roms-grid">
+                    <div class="roms-initial-state">
+                        <div class="icon-container">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                 <circle cx="12" cy="12" r="10"></circle>
-                                <path d="M8 12h8M12 8v8"></path>
+                                <path d="M8 12h8M12 8v8" stroke-linecap="round"></path>
                             </svg>
-                            <p>Selecione um servidor ao lado para carregar as ROMs.</p>
                         </div>
+                        <h3>Nenhum Servidor Ativo</h3>
+                        <p>Abra o menu de configurações no canto superior esquerdo e conecte-se a um servidor de ROMs para carregar a biblioteca.</p>
                     </div>
-                    
-                    <!-- Infinite Scroll Trigger -->
-                    <div id="infinite-scroll-trigger"></div>
                 </div>
-            </section>
+                
+                <!-- Infinite Scroll Load Trigger -->
+                <div id="infinite-scroll-trigger"></div>
+            </div>
         </main>
 
-        <!-- Sidebar: Server Config Drawer (Fora do grid principal) -->
-        <section id="sidebar-section" class="sidebar-section">
+        <!-- Sidebar Settings Drawer (collapsible, floats over page) -->
+        <section id="sidebar-section" class="sidebar-section glass">
             <div class="sidebar-header">
-                <h3>Configurações</h3>
-                <button id="btn-close-sidebar" class="btn-close-sidebar" title="Fechar Painel">
+                <h2>Configurações</h2>
+                <button id="btn-close-sidebar" class="icon-btn close-btn" title="Fechar Painel">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                        <line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round"></line>
+                        <line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round"></line>
                     </svg>
                 </button>
             </div>
 
-            <div class="card glass">
-                <h2>
-                    <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="3" width="20" height="8" rx="2" />
-                        <rect x="2" y="13" width="20" height="8" rx="2" />
-                        <line x1="6" y1="7" x2="6.01" y2="7" stroke-linecap="round" />
-                        <line x1="6" y1="17" x2="6.01" y2="17" stroke-linecap="round" />
-                    </svg>
-                    Configurar Servidor
-                </h2>
-                
-                <form id="server-form" class="server-form">
-                    <div class="form-group">
-                        <label for="server-name">Nome do Servidor</label>
-                        <input type="text" id="server-name" placeholder="Ex: Meu Servidor Local" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="server-url">Endereço (IP e Porta)</label>
-                        <input type="text" id="server-url" placeholder="Ex: 192.168.1.55:8084" required>
-                        <small>Digite o IP e a porta (ou endereço completo) do seu servidor de ROMs.</small>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block">
-                        Salvar Servidor
-                    </button>
-                </form>
-            </div>
+            <div class="drawer-content">
+                <!-- Server Config Card -->
+                <div class="card config-card glass-inner">
+                    <h3>Conectar Servidor</h3>
+                    <form id="server-form" class="server-form">
+                        <div class="form-group">
+                            <label for="server-name">Identificação</label>
+                            <input type="text" id="server-name" placeholder="Ex: Meu Dropbox de ROMs" required autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="server-url">Endereço do Servidor / Arquivo JSON</label>
+                            <input type="text" id="server-url" placeholder="Ex: dropbox.com/scl/.../roms.json" required autocomplete="off">
+                            <span class="input-hint">Insira o link do seu arquivo ROMs JSON do Dropbox ou o IP do servidor local.</span>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            Salvar Servidor
+                        </button>
+                    </form>
+                </div>
 
-            <div class="card glass server-list-card">
-                <h2>Meus Servidores</h2>
-                <div id="servers-container" class="servers-grid">
-                    <!-- Dynamic Server Buttons will go here -->
-                    <div class="empty-state">Nenhum servidor salvo.</div>
+                <!-- Servers List Manager Card -->
+                <div class="card list-card glass-inner">
+                    <h3>Meus Servidores</h3>
+                    <div id="servers-container" class="servers-grid">
+                        <div class="empty-state">Nenhum servidor configurado.</div>
+                    </div>
+                </div>
+                
+                <!-- Controller Guide Card -->
+                <div class="card guide-card glass-inner">
+                    <h3>Atalhos do Controle</h3>
+                    <div class="guide-list">
+                        <div class="guide-item"><span>D-Pad</span><span>Movimentação</span></div>
+                        <div class="guide-item"><span>Botão A/B/X/Y</span><span>Ações do jogo</span></div>
+                        <div class="guide-item"><span>L / R</span><span>Gatilhos superiores</span></div>
+                        <div class="guide-item"><span>Select + Start</span><span>Menu do Emulador</span></div>
+                    </div>
                 </div>
             </div>
         </section>
         
-        <!-- Sidebar Drawer Overlay -->
+        <!-- Sidebar Backdrop Overlay -->
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
     </div>
 
-    <!-- Fullscreen Emulator Container Overlay -->
+    <!-- Fullscreen Playable Emulator Layer Overlay -->
     <div id="emulator-overlay" class="emulator-overlay hidden">
-        <header class="emulator-header">
-            <button id="btn-exit-emulator" class="btn btn-secondary btn-exit">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-svg">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
+        <header class="emulator-header glass">
+            <button id="btn-exit-emulator" class="btn-exit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="btn-icon-svg">
+                    <line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round"></line>
+                    <line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round"></line>
                 </svg>
-                Sair do Jogo
+                Fechar Jogo
             </button>
-            <h3 id="current-game-title">Jogando</h3>
+            <h2 id="current-game-title">Carregando Jogo...</h2>
         </header>
         <div id="emulator-game-container">
             <!-- EmulatorJS iframe will inject here -->
         </div>
     </div>
 
-    <!-- Toast Notifications -->
+    <!-- Toast Dynamic Notifications Container -->
     <div id="toast-container" class="toast-container"></div>
 
-    <!-- Script Application -->
-    <script src="app.js?v=1.1.4" defer></script>
+    <!-- App Main Script -->
+    <script src="app.js?v=1.1.5" defer></script>
 </body>
 </html>
