@@ -214,6 +214,10 @@ body {
     gap: 2rem;
 }
 
+.content-section {
+    min-width: 0;
+}
+
 .card {
     border-radius: var(--radius-md);
     padding: 1.5rem;
@@ -489,6 +493,7 @@ body {
 .active-server-banner {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.5rem;
     padding: 0.75rem 1.25rem;
     background: rgba(255, 255, 255, 0.02);
@@ -497,6 +502,7 @@ body {
     margin-bottom: 1.5rem;
     font-size: 0.85rem;
     animation: fadeIn 0.4s ease;
+    word-break: break-all;
 }
 
 .active-server-banner.hidden {
@@ -515,6 +521,7 @@ body {
 .active-url {
     color: var(--text-secondary);
     font-family: monospace;
+    word-break: break-all;
 }
 
 /* Spinner */
