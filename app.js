@@ -54,6 +54,10 @@ let searchInput, btnRefresh, activeServerBanner, activeServerName, activeServerU
 let romsLoading, romsContainer;
 let emulatorOverlay, btnExitEmulator, currentGameTitle, emulatorContainer;
 let gamepadStatus, gamepadStatusText;
+let menuToggle, sidebarSection, btnCloseSidebar, sidebarOverlay;
+
+// Server Edit state
+let editingServerId = null;
 
 function initDOM() {
     serverForm = document.getElementById('server-form');
@@ -79,6 +83,11 @@ function initDOM() {
     if (gamepadStatus) {
         gamepadStatusText = gamepadStatus.querySelector('.status-text');
     }
+    
+    menuToggle = document.getElementById('menu-toggle');
+    sidebarSection = document.getElementById('sidebar-section');
+    btnCloseSidebar = document.getElementById('btn-close-sidebar');
+    sidebarOverlay = document.getElementById('sidebar-overlay');
 }
 
 // Initialize App
@@ -125,7 +134,7 @@ function showToast(message, type = 'success') {
 
 // Setup Event Listeners
 function setupEventListeners() {
-    // Server form submission
+    // Server form submission (suporta adição e edição)
     serverForm.addEventListener('submit', (e) => {
         e.preventDefault();
         
@@ -141,19 +150,61 @@ function setupEventListeners() {
             url = url.slice(0, -1);
         }
         
-        const newServer = {
-            id: Date.now(),
-            name: serverNameInput.value.trim(),
-            url: url
+        const serverName = serverNameInput.value.trim();
+        
+        if (editingServerId !== null) {
+            // Editando servidor existente
+            const serverIndex = state.servers.findIndex(s => s.id === editingServerId);
+            if (serverIndex !== -1) {
+                state.servers[serverIndex].name = serverName;
+                state.servers[serverIndex].url = url;
+                
+                // Se o servidor editado for o ativo, atualiza o banner
+                if (state.activeServer && state.activeServer.id === editingServerId) {
+                    state.activeServer = state.servers[serverIndex];
+                    activeServerName.textContent = state.activeServer.name;
+                    activeServerUrl.textContent = state.activeServer.url;
+                }
+                
+                saveServers();
+                renderServers();
+                showToast('Servidor atualizado!');
+            }
+            cancelEditingServer();
+        } else {
+            // Adicionando novo servidor
+            const newServer = {
+                id: Date.now(),
+                name: serverName,
+                url: url
+            };
+            
+            state.servers.push(newServer);
+            saveServers();
+            renderServers();
+            
+            serverForm.reset();
+            showToast('Servidor adicionado com sucesso!');
+        }
+    });
+
+    // Controle da barra lateral (Drawer Settings)
+    if (menuToggle && sidebarSection && sidebarOverlay) {
+        const closeSidebar = () => {
+            sidebarSection.classList.remove('open');
+            sidebarOverlay.classList.remove('open');
         };
         
-        state.servers.push(newServer);
-        saveServers();
-        renderServers();
+        menuToggle.addEventListener('click', () => {
+            sidebarSection.classList.add('open');
+            sidebarOverlay.classList.add('open');
+        });
         
-        serverForm.reset();
-        showToast('Servidor adicionado com sucesso!');
-    });
+        if (btnCloseSidebar) {
+            btnCloseSidebar.addEventListener('click', closeSidebar);
+        }
+        sidebarOverlay.addEventListener('click', closeSidebar);
+    }
     
     // Search ROMs input with debounce and pagination
     const debouncedSearch = debounce((query) => {
@@ -263,21 +314,35 @@ function renderServers() {
                 <span class="server-info-name">${server.name}</span>
                 <span class="server-info-url">${server.url}</span>
             </div>
-            <button class="btn-delete-server" title="Remover Servidor">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    <line x1="10" y1="11" x2="10" y2="17"></line>
-                    <line x1="14" y1="11" x2="14" y2="17"></line>
-                </svg>
-            </button>
+            <div class="server-actions">
+                <button class="btn-edit-server" title="Editar Servidor">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </button>
+                <button class="btn-delete-server" title="Remover Servidor">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                </button>
+            </div>
         `;
         
         // Click to load server
         item.addEventListener('click', (e) => {
-            // Avoid triggering when delete is clicked
-            if (e.target.closest('.btn-delete-server')) return;
+            // Avoid triggering when actions are clicked
+            if (e.target.closest('.server-actions')) return;
             loadServer(server);
+        });
+        
+        // Edit server action
+        item.querySelector('.btn-edit-server').addEventListener('click', (e) => {
+            e.stopPropagation();
+            startEditingServer(server);
         });
         
         // Delete server action
@@ -290,10 +355,58 @@ function renderServers() {
     });
 }
 
+// Auxiliares para Edição de Servidor
+function startEditingServer(server) {
+    editingServerId = server.id;
+    serverNameInput.value = server.name;
+    serverUrlInput.value = server.url;
+    
+    const submitBtn = serverForm.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.textContent = 'Atualizar Servidor';
+        submitBtn.classList.add('btn-warning');
+    }
+    
+    let cancelBtn = document.getElementById('btn-cancel-edit');
+    if (!cancelBtn) {
+        cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.id = 'btn-cancel-edit';
+        cancelBtn.className = 'btn btn-secondary btn-block';
+        cancelBtn.style.marginTop = '0.5rem';
+        cancelBtn.textContent = 'Cancelar Edição';
+        cancelBtn.addEventListener('click', cancelEditingServer);
+        serverForm.appendChild(cancelBtn);
+    }
+    
+    serverNameInput.focus();
+}
+
+function cancelEditingServer() {
+    editingServerId = null;
+    serverForm.reset();
+    
+    const submitBtn = serverForm.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.textContent = 'Salvar Servidor';
+        submitBtn.classList.remove('btn-warning');
+    }
+    
+    const cancelBtn = document.getElementById('btn-cancel-edit');
+    if (cancelBtn) {
+        cancelBtn.remove();
+    }
+}
+
 // Delete Server logic
 function deleteServer(id) {
     state.servers = state.servers.filter(s => s.id !== id);
     saveServers();
+    
+    // Fechar edição se for o servidor deletado
+    if (editingServerId === id) {
+        cancelEditingServer();
+    }
     
     // If the active server was deleted, reset state
     if (state.activeServer && state.activeServer.id === id) {
@@ -337,6 +450,12 @@ function loadServer(server) {
     activeServerName.textContent = server.name;
     activeServerUrl.textContent = server.url;
     activeServerBanner.classList.remove('hidden');
+    
+    // Fechar a barra lateral ao selecionar o servidor
+    if (sidebarSection && sidebarOverlay) {
+        sidebarSection.classList.remove('open');
+        sidebarOverlay.classList.remove('open');
+    }
     
     // Unlock Actions
     searchInput.disabled = false;
@@ -548,15 +667,43 @@ function getFileName(path) {
     }
 }
 
-// Normalizar nomes para melhor correspondência de capas (trata minúsculas, underlines, hifens e tags de região)
-function normalizeNameForBoxart(name) {
-    // Substituir underlines e hifens por espaços
-    let clean = name.replace(/[_-]/g, ' ');
+// Limpa o nome do jogo removendo marcas de tradução/hacks para bater melhor com a Libretro CDN
+function cleanNameForGuesses(name) {
+    // 1. Remover colchetes [...] (geralmente tags de hack/tradutores)
+    let clean = name.replace(/\[[^\]]*\]/g, '');
     
-    // Remover espaços múltiplos e pontas
+    // 2. Filtrar e preservar apenas parênteses com regiões válidas da CDN
+    const regionRegex = /\((USA|Europe|Japan|World|En,Fr,De,Es,It|Proto|Beta|France|Germany|Italy|Spain|UK)\)/i;
+    
+    const regionsMatched = clean.match(/\(([^)]+)\)/g);
+    let regionToKeep = null;
+    if (regionsMatched) {
+        for (let r of regionsMatched) {
+            if (regionRegex.test(r)) {
+                regionToKeep = r;
+                break;
+            }
+        }
+    }
+    
+    // Remover todas as tags entre parênteses para obter o nome limpo base
+    clean = clean.replace(/\([^)]*\)/g, '');
+    
+    // Limpar espaços extras
     clean = clean.replace(/\s+/g, ' ').trim();
     
-    // Capitalizar primeira letra de cada palavra (Title Case)
+    return {
+        baseName: clean,
+        region: regionToKeep
+    };
+}
+
+// Normalizar nomes para melhor correspondência de capas (trata minúsculas, underlines, hifens e tags de região)
+function normalizeNameForBoxart(name) {
+    let clean = name.replace(/[_-]/g, ' ');
+    clean = clean.replace(/\s+/g, ' ').trim();
+    
+    // Capitalizar Title Case
     clean = clean.toLowerCase().split(' ').map(word => {
         if (word === 'usa') return 'USA';
         if (word === 'jpn' || word === 'jap') return 'Japan';
@@ -564,7 +711,6 @@ function normalizeNameForBoxart(name) {
         return word.charAt(0).toUpperCase() + word.slice(1);
     }).join(' ');
     
-    // Corrigir parênteses de região comuns
     clean = clean.replace(/\(usa\)/i, '(USA)');
     clean = clean.replace(/\(europe\)/i, '(Europe)');
     clean = clean.replace(/\(japan\)/i, '(Japan)');
@@ -573,28 +719,34 @@ function normalizeNameForBoxart(name) {
     return clean;
 }
 
-// Guess official cover art URLs from Libretro CDN
+// Guess official cover art URLs from Libretro CDN com fallback inteligente
 function getBoxartGuesses(cleanName) {
     const baseUrl = "https://thumbnails.libretro.com/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System/Named_Boxarts/";
     
-    // Normalizar o nome antes de gerar as URLs de tentativa
-    const normalizedName = normalizeNameForBoxart(cleanName);
-    const encodedName = encodeURIComponent(normalizedName);
+    const { baseName, region } = cleanNameForGuesses(cleanName);
+    const normalizedBase = normalizeNameForBoxart(baseName);
     
-    // If name already contains parentheses (like "Super Mario World (USA)"), search it directly
-    if (/\(.*\)/.test(normalizedName)) {
-        return [
-            `${baseUrl}${encodedName}.png`
-        ];
+    const guesses = [];
+    
+    // 1. Tentar com a região original se ela foi preservada
+    if (region) {
+        const normalizedRegion = normalizeNameForBoxart(region);
+        guesses.push(`${baseUrl}${encodeURIComponent(normalizedBase + ' ' + normalizedRegion)}.png`);
     }
     
-    // Otherwise try most common region extensions
-    return [
-        `${baseUrl}${encodeURIComponent(normalizedName + ' (USA)')}.png`,
-        `${baseUrl}${encodedName}.png`,
-        `${baseUrl}${encodeURIComponent(normalizedName + ' (Europe)')}.png`,
-        `${baseUrl}${encodeURIComponent(normalizedName + ' (Japan)')}.png`
-    ];
+    // 2. Tentar com região padrão USA
+    guesses.push(`${baseUrl}${encodeURIComponent(normalizedBase + ' (USA)')}.png`);
+    
+    // 3. Tentar nome bruto sem região
+    guesses.push(`${baseUrl}${encodeURIComponent(normalizedBase)}.png`);
+    
+    // 4. Tentar com região Europe
+    guesses.push(`${baseUrl}${encodeURIComponent(normalizedBase + ' (Europe)')}.png`);
+    
+    // 5. Tentar com região Japan
+    guesses.push(`${baseUrl}${encodeURIComponent(normalizedBase + ' (Japan)')}.png`);
+    
+    return guesses;
 }
 
 // Exibir skeletons de carregamento
@@ -660,6 +812,19 @@ function createRomCard(rom) {
     card.innerHTML = `
         <div class="rom-card-bg-gradient"></div>
         <img class="rom-card-cover" alt="" style="display: none;">
+        
+        <!-- Fallback cover decorativo se a boxart falhar -->
+        <div class="rom-card-fallback-cover">
+            <svg class="fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="6" width="20" height="12" rx="3" />
+                <circle cx="6" cy="12" r="1.5" fill="currentColor" />
+                <circle cx="9" cy="12" r="1.5" fill="currentColor" />
+                <circle cx="15" cy="11" r="1" fill="currentColor" />
+                <circle cx="15" cy="13" r="1" fill="currentColor" />
+                <circle cx="17" cy="12" r="1" fill="currentColor" />
+            </svg>
+        </div>
+        
         <div class="rom-card-overlay"></div>
         <span class="rom-card-title" title="${rom.text}">${rom.text}</span>
         <div class="rom-card-meta">
@@ -686,6 +851,9 @@ function createRomCard(rom) {
         guessIndex++;
         if (guessIndex < guesses.length) {
             img.src = guesses[guessIndex];
+        } else {
+            // Esgotou guesses: adiciona classe de sem capa
+            card.classList.add('no-cover');
         }
     };
     

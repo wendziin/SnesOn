@@ -42,16 +42,26 @@
 
         <!-- Header -->
         <header class="main-header">
-            <div class="header-logo">
-                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="2" y="6" width="20" height="12" rx="3" />
-                    <circle cx="6" cy="12" r="1.5" fill="currentColor" />
-                    <circle cx="9" cy="12" r="1.5" fill="currentColor" />
-                    <circle cx="15" cy="11" r="1" fill="currentColor" />
-                    <circle cx="15" cy="13" r="1" fill="currentColor" />
-                    <circle cx="17" cy="12" r="1" fill="currentColor" />
-                </svg>
-                <h1>RetroStream <span>SNES</span></h1>
+            <div class="header-left">
+                <!-- Hamburger Menu Button -->
+                <button id="menu-toggle" class="btn-menu" title="Configurar Servidores">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="header-logo">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="6" width="20" height="12" rx="3" />
+                        <circle cx="6" cy="12" r="1.5" fill="currentColor" />
+                        <circle cx="9" cy="12" r="1.5" fill="currentColor" />
+                        <circle cx="15" cy="11" r="1" fill="currentColor" />
+                        <circle cx="15" cy="13" r="1" fill="currentColor" />
+                        <circle cx="17" cy="12" r="1" fill="currentColor" />
+                    </svg>
+                    <h1>RetroStream <span>SNES</span></h1>
+                </div>
             </div>
             
             <div class="header-status">
@@ -65,8 +75,18 @@
 
         <!-- Main Workspace -->
         <main class="main-workspace">
-            <!-- Sidebar: Server Config -->
-            <section class="sidebar-section">
+            <!-- Sidebar: Server Config Drawer -->
+            <section id="sidebar-section" class="sidebar-section">
+                <div class="sidebar-header">
+                    <h3>Configurações</h3>
+                    <button id="btn-close-sidebar" class="btn-close-sidebar" title="Fechar Painel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
                 <div class="card glass">
                     <h2>
                         <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -157,8 +177,10 @@
                     <!-- Infinite Scroll Trigger -->
                     <div id="infinite-scroll-trigger"></div>
                 </div>
-            </section>
         </main>
+        
+        <!-- Sidebar Drawer Overlay -->
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
     </div>
 
     <!-- Fullscreen Emulator Container Overlay -->

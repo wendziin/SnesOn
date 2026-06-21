@@ -85,9 +85,41 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.25rem;
     border-bottom: 1px solid var(--border-color);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+/* Hamburguer Menu Button */
+.btn-menu {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.btn-menu:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #8b5cf6;
+}
+
+.btn-menu svg {
+    width: 22px;
+    height: 22px;
 }
 
 .header-status {
@@ -95,8 +127,6 @@ body {
     gap: 0.75rem;
     align-items: center;
 }
-
-
 
 .header-logo {
     display: flex;
@@ -168,21 +198,94 @@ body {
 /* Workspace Layout */
 .main-workspace {
     display: grid;
-    grid-template-columns: 320px 1fr;
+    grid-template-columns: 1fr; /* Lista inteira ocupa a largura total */
     gap: 2rem;
     align-items: start;
 }
 
-@media (max-width: 968px) {
-    .main-workspace {
-        grid-template-columns: 1fr;
-    }
-}
-
+/* Sidebar Drawer - Painel lateral deslizante flutuante */
 .sidebar-section {
+    position: fixed;
+    top: 0;
+    left: -360px; /* Inicialmente fora da tela */
+    width: 340px;
+    height: 100vh;
+    background: rgba(10, 10, 16, 0.96);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-right: 1px solid var(--border-color);
+    z-index: 1000;
+    transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.5rem;
+    padding: 2rem 1.5rem;
+    overflow-y: auto;
+    box-shadow: 15px 0 45px rgba(0, 0, 0, 0.7);
+}
+
+.sidebar-section.open {
+    left: 0;
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(2, 2, 4, 0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Sidebar Header inside drawer */
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-header h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.btn-close-sidebar {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.btn-close-sidebar:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.btn-close-sidebar svg {
+    width: 20px;
+    height: 20px;
 }
 
 .content-section {
@@ -325,7 +428,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.75rem 1rem;
+    padding: 0.85rem 1rem;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
@@ -334,22 +437,23 @@ body {
 }
 
 .server-item:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(139, 92, 246, 0.3);
+    background: rgba(139, 92, 246, 0.04);
+    border-color: rgba(139, 92, 246, 0.2);
 }
 
 .server-item.active {
-    background: rgba(139, 92, 246, 0.1);
+    background: rgba(139, 92, 246, 0.12);
     border-color: #8b5cf6;
-    box-shadow: 0 0 12px rgba(139, 92, 246, 0.15);
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
 }
 
 .server-info {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 0.25rem;
     min-width: 0;
     flex-grow: 1;
+    margin-right: 0.5rem;
 }
 
 .server-info-name {
@@ -358,6 +462,7 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: var(--text-primary);
 }
 
 .server-info-url {
@@ -368,24 +473,50 @@ body {
     white-space: nowrap;
 }
 
-.btn-delete-server {
+.server-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.btn-edit-server, .btn-delete-server {
     background: transparent;
     border: none;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     cursor: pointer;
-    padding: 0.25rem;
+    padding: 0.35rem;
     border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: var(--transition);
 }
 
-.btn-delete-server:hover {
-    color: var(--accent-red);
-    background: rgba(239, 68, 68, 0.1);
+.btn-edit-server:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #eab308;
 }
 
-.btn-delete-server svg {
+.btn-delete-server:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #ef4444;
+}
+
+.btn-edit-server svg, .btn-delete-server svg {
     width: 16px;
     height: 16px;
+}
+
+/* Warning button state for server editing */
+.btn-warning {
+    background: #eab308 !important;
+    color: #050508 !important;
+    border-color: #eab308 !important;
+    font-weight: 600;
+}
+
+.btn-warning:hover {
+    background: #ca8a04 !important;
+    border-color: #ca8a04 !important;
 }
 
 .empty-state {
@@ -632,6 +763,38 @@ body {
 
 .rom-card.has-cover {
     border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Fallback cover styling when no boxart is found */
+.rom-card-fallback-cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1e1b4b 0%, #311042 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 0;
+    opacity: 0.85;
+    transition: var(--transition);
+}
+
+.rom-card-fallback-cover .fallback-icon {
+    width: 72px;
+    height: 72px;
+    color: rgba(139, 92, 246, 0.15); /* Bem sutil no fundo */
+    transition: var(--transition);
+}
+
+.rom-card:hover .rom-card-fallback-cover .fallback-icon {
+    color: rgba(139, 92, 246, 0.25);
+    transform: scale(1.08);
+}
+
+.rom-card.has-cover .rom-card-fallback-cover {
+    display: none;
 }
 
 .rom-card-title {
