@@ -832,10 +832,16 @@ function launchGame(rom) {
     emulatorContainer.innerHTML = '';
     const iframe = document.createElement('iframe');
     
+    // Bypass CORS do Dropbox usando o proxy público corsproxy.io
+    let targetRomUrl = rom.absoluteUrl;
+    if (targetRomUrl.includes('dropbox.com') || targetRomUrl.includes('dropboxusercontent.com')) {
+        targetRomUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetRomUrl);
+    }
+    
     // Encode components correctly for query params
-    const encodedRomUrl = encodeURIComponent(rom.absoluteUrl);
+    const encodedRomUrl = encodeURIComponent(targetRomUrl);
     const core = 'snes';
-    iframe.src = `emulator.html?v=1.0.7&game=${encodedRomUrl}&core=${core}`;
+    iframe.src = `emulator.html?v=1.1.3&game=${encodedRomUrl}&core=${core}`;
     iframe.allow = "autoplay; gamepad";
     
     emulatorContainer.appendChild(iframe);
