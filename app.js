@@ -473,7 +473,7 @@ async function fetchRomsForActiveServer() {
     state.isLoadingRoms = true;
     showSkeletons(12);
     if (romsLoading) {
-        romsLoading.classList.add('hidden');
+        romsLoading.classList.remove('hidden');
     }
     
     try {
