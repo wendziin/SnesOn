@@ -1,3 +1,11 @@
 node_modules/
 *.log
 .DS_Store
+
+# Jogos e Emulador local
+roms/
+snes-emulator.zip
+
+# Scripts temporários
+push_in_batches.js
+temp_pathspec.txt
