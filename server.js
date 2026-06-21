@@ -13,11 +13,12 @@ if (!fs.existsSync(ROMS_DIR)) {
 }
 
 const server = http.createServer((req, res) => {
-    // Configurar cabeçalhos CORS obrigatórios para o navegador carregar as ROMs de outra origem
+    // Configurar cabeçalhos CORS e CORP obrigatórios para compatibilidade com Cross-Origin Isolation
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
     res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
 
     // Tratar requisição de preflight OPTIONS do navegador
     if (req.method === 'OPTIONS') {
