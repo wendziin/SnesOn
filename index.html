@@ -75,54 +75,6 @@
 
         <!-- Main Workspace -->
         <main class="main-workspace">
-            <!-- Sidebar: Server Config Drawer -->
-            <section id="sidebar-section" class="sidebar-section">
-                <div class="sidebar-header">
-                    <h3>Configurações</h3>
-                    <button id="btn-close-sidebar" class="btn-close-sidebar" title="Fechar Painel">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="card glass">
-                    <h2>
-                        <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="3" width="20" height="8" rx="2" />
-                            <rect x="2" y="13" width="20" height="8" rx="2" />
-                            <line x1="6" y1="7" x2="6.01" y2="7" stroke-linecap="round" />
-                            <line x1="6" y1="17" x2="6.01" y2="17" stroke-linecap="round" />
-                        </svg>
-                        Configurar Servidor
-                    </h2>
-                    
-                    <form id="server-form" class="server-form">
-                        <div class="form-group">
-                            <label for="server-name">Nome do Servidor</label>
-                            <input type="text" id="server-name" placeholder="Ex: Meu Servidor Local" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="server-url">Endereço (IP e Porta)</label>
-                            <input type="text" id="server-url" placeholder="Ex: 192.168.1.55:8084" required>
-                            <small>Digite o IP e a porta (ou endereço completo) do seu servidor de ROMs.</small>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block">
-                            Salvar Servidor
-                        </button>
-                    </form>
-                </div>
-
-                <div class="card glass server-list-card">
-                    <h2>Meus Servidores</h2>
-                    <div id="servers-container" class="servers-grid">
-                        <!-- Dynamic Server Buttons will go here -->
-                        <div class="empty-state">Nenhum servidor salvo.</div>
-                    </div>
-                </div>
-            </section>
-
             <!-- Main Content Area: ROMs Browser -->
             <section class="content-section">
                 <div class="card glass roms-browser-card">
@@ -179,6 +131,54 @@
                 </div>
             </section>
         </main>
+
+        <!-- Sidebar: Server Config Drawer (Fora do grid principal) -->
+        <section id="sidebar-section" class="sidebar-section">
+            <div class="sidebar-header">
+                <h3>Configurações</h3>
+                <button id="btn-close-sidebar" class="btn-close-sidebar" title="Fechar Painel">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="card glass">
+                <h2>
+                    <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="8" rx="2" />
+                        <rect x="2" y="13" width="20" height="8" rx="2" />
+                        <line x1="6" y1="7" x2="6.01" y2="7" stroke-linecap="round" />
+                        <line x1="6" y1="17" x2="6.01" y2="17" stroke-linecap="round" />
+                    </svg>
+                    Configurar Servidor
+                </h2>
+                
+                <form id="server-form" class="server-form">
+                    <div class="form-group">
+                        <label for="server-name">Nome do Servidor</label>
+                        <input type="text" id="server-name" placeholder="Ex: Meu Servidor Local" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="server-url">Endereço (IP e Porta)</label>
+                        <input type="text" id="server-url" placeholder="Ex: 192.168.1.55:8084" required>
+                        <small>Digite o IP e a porta (ou endereço completo) do seu servidor de ROMs.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        Salvar Servidor
+                    </button>
+                </form>
+            </div>
+
+            <div class="card glass server-list-card">
+                <h2>Meus Servidores</h2>
+                <div id="servers-container" class="servers-grid">
+                    <!-- Dynamic Server Buttons will go here -->
+                    <div class="empty-state">Nenhum servidor salvo.</div>
+                </div>
+            </div>
+        </section>
         
         <!-- Sidebar Drawer Overlay -->
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
