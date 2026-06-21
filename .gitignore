@@ -6,6 +6,7 @@ node_modules/
 roms/
 snes-emulator.zip
 
-# Scripts temporários
+# Scripts temporários e chaves privadas
 push_in_batches.js
+generate_dropbox_json.js
 temp_pathspec.txt
