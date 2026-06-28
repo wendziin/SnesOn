@@ -701,9 +701,15 @@ async function fetchRomsForActiveServer() {
                 <p style="font-size: 0.85rem; max-width: 420px; margin-top: 0.25rem;">
                     ${isDropboxErr ? error.message : 'Certifique-se de que o endereço do servidor (ou link do GitHub) está correto e ativo.'}
                 </p>
+                <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 6px; font-family: monospace; font-size: 0.75rem; color: #fca5a5; max-width: 400px; word-break: break-all; text-align: left; line-height: 1.4;">
+                    <strong style="color: #f87171;">Detalhes do Diagnóstico:</strong><br>
+                    • <strong>Erro:</strong> ${error.name}<br>
+                    • <strong>Mensagem:</strong> ${error.message}<br>
+                    • <strong>URL tentada:</strong> <span style="font-size: 0.7rem; color: #93c5fd;">${url}</span>
+                </div>
             </div>
         `;
-        showToast(isDropboxErr ? 'Dropbox não suportado.' : 'Erro de conexão com o servidor ou GitHub.', 'error');
+        showToast(isDropboxErr ? 'Dropbox não suportado.' : `Erro: ${error.message}`, 'error');
     }
 }
 
