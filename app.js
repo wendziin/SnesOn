@@ -817,6 +817,16 @@ function showSkeletons(count = 12) {
 
 // Configurar o Intersection Observer para rolagem com paginação
 function setupIntersectionObserver() {
+    if (!window.IntersectionObserver) {
+        // Fallback para navegadores antigos: desativa a paginação e renderiza tudo de uma vez
+        console.warn("IntersectionObserver não é suportado neste navegador. Carregando todas as ROMs.");
+        state.pagination.itemsPerPage = 9999;
+        state.pagination.hasMore = false;
+        renderNextPage(true);
+        updateScrollTriggerMessage();
+        return;
+    }
+
     if (state.observer) {
         state.observer.disconnect();
     }
