@@ -55,6 +55,7 @@ let romsLoading, romsContainer;
 let emulatorOverlay, btnExitEmulator, currentGameTitle, emulatorContainer;
 let gamepadStatus, gamepadStatusText;
 let menuToggle, sidebarSection, btnCloseSidebar, sidebarOverlay;
+let liteModeCheckbox;
 
 // Server Edit state
 let editingServerId = null;
@@ -88,14 +89,64 @@ function initDOM() {
     sidebarSection = document.getElementById('sidebar-section');
     btnCloseSidebar = document.getElementById('btn-close-sidebar');
     sidebarOverlay = document.getElementById('sidebar-overlay');
+    liteModeCheckbox = document.getElementById('lite-mode-checkbox');
 }
 
 // Initialize App
 function initializeAll() {
     initDOM();
     loadSavedServers();
+    initLiteMode();
     setupEventListeners();
     setupGamepadDetection();
+}
+
+function initLiteMode() {
+    const savedLiteMode = safeStorage.getItem('retrostream_lite_mode');
+    
+    // Se o valor estiver salvo, aplica; se não, detecta se o user agent é uma TV
+    let isLiteActive = false;
+    if (savedLiteMode !== null) {
+        isLiteActive = (savedLiteMode === 'true');
+    } else {
+        // Detecção básica de TV/dispositivos lentos
+        const ua = navigator.userAgent.toLowerCase();
+        isLiteActive = ua.includes('smart-tv') || 
+                       ua.includes('smarttv') || 
+                       ua.includes('googletv') || 
+                       ua.includes('appletv') || 
+                       ua.includes('firetv') || 
+                       ua.includes('netcast') || 
+                       ua.includes('opera tv') || 
+                       ua.includes('tizen') || 
+                       ua.includes('playstation') || 
+                       ua.includes('xbox');
+    }
+    
+    // Sincroniza estado visual
+    if (isLiteActive) {
+        document.body.classList.add('is-lite');
+        if (liteModeCheckbox) liteModeCheckbox.checked = true;
+        console.log("RetroStream: Modo Lite ativado para melhor performance.");
+    } else {
+        document.body.classList.remove('is-lite');
+        if (liteModeCheckbox) liteModeCheckbox.checked = false;
+    }
+    
+    // Configura o ouvinte de alteração do checkbox
+    if (liteModeCheckbox) {
+        liteModeCheckbox.addEventListener('change', (e) => {
+            const active = e.target.checked;
+            safeStorage.setItem('retrostream_lite_mode', active ? 'true' : 'false');
+            if (active) {
+                document.body.classList.add('is-lite');
+                showToast('Modo Lite ativado! Efeitos visuais desativados.', 'success');
+            } else {
+                document.body.classList.remove('is-lite');
+                showToast('Modo Lite desativado! Efeitos visuais ativados.', 'success');
+            }
+        });
+    }
 }
 
 if (document.readyState === 'loading') {

@@ -32,7 +32,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="styles.css?v=1.1.7">
+    <link rel="stylesheet" href="styles.css?v=1.1.8">
 </head>
 <body>
     <!-- Decorative Glowing Ambient Lights -->
@@ -176,6 +176,21 @@
                     </div>
                 </div>
                 
+                <!-- Performance Settings Card -->
+                <div class="card performance-card glass-inner">
+                    <h3>Performance</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-title">Modo Lite</span>
+                            <span class="setting-description">Desativa efeitos visuais e animações complexas para poupar CPU e rodar melhor em Smart TVs ou celulares antigos.</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="lite-mode-checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
                 <!-- Controller Guide Card -->
                 <div class="card guide-card glass-inner">
                     <h3>Atalhos do Controle</h3>
@@ -214,6 +229,6 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- App Main Script -->
-    <script src="app.js?v=1.1.7" defer></script>
+    <script src="app.js?v=1.1.8" defer></script>
 </body>
 </html>
